@@ -1,4 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
+final dio = Dio();
 
 class ProjectInfoPage extends StatefulWidget{
   ProjectInfoPageState createState() => ProjectInfoPageState();
@@ -9,9 +12,73 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
   bool basicOpen = false;
   bool exchangeOpen = false;
   bool resultOpen = false;
+  // 로딩 상태 관리
+  bool dataLoaded = false;
+  // 데이터 관리
+  Map<String,dynamic>? basicInfo = {};
+  Map<String,dynamic>? resultMap = {};
 
-  String? projectName;
+  String? pjname;
   int? pjno;
+  String? token;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // 데이터를 추출했으면 리턴
+    if (dataLoaded) {
+      return;
+    }// if end
+
+    // pjno 꺼내기
+    final args = ModalRoute.of(context)?.settings.arguments;
+
+    // int로 캐스팅
+    if (args is Map) {
+      pjno = args['pjno'] as int?;
+      token = args['token'] as String?;
+      pjname = args['pjname'] as String?;
+      // 상세정보 불러오기
+      if (pjno != null) {
+        readAllDetails();
+        dataLoaded = true; // 로딩 시작 플래그 설정
+      }// if end
+    }// if end
+  }// f end
+
+  // 프로젝트 상세조회
+  void readAllDetails() async{
+    if (pjno == null || token == null) return;
+
+    try{
+      // 1. 기본정보 상세조회
+      final basicResponse = await dio.get(
+          "http://192.168.40.36:8080/api/project/flutter?pjno=$pjno",
+          options: Options(headers: { 'Authorization' : 'Bearer $token' })
+      );
+
+      // 2. LCI 결과 조회
+      final lciResponse = await dio.get("http://192.168.40.36:8080/api/lci?pjno=$pjno");
+
+      setState(() {
+        if (basicResponse.data != null) {
+          basicInfo = basicResponse.data as Map<String, dynamic>;
+        }
+        if (lciResponse.data != null) {
+          resultMap = lciResponse.data as Map<String, dynamic>;
+        }
+        dataLoaded = true;
+      });
+    }catch(e){
+      print("통신 오류 : $e");
+      setState(() {
+        dataLoaded = true; // 통신 실패해도 로딩 완료 처리
+      });
+    }
+  }// f end
+
+
 
   Widget buildBasicAccordion() {
     return ExpansionTile(
@@ -31,10 +98,7 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
        });
       },
       children: <Widget>[
-        Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text("실제 정보 구역"),
-        )
+        ProjectBasicInfoWidget( basicData : basicInfo ?? {} )
       ],
 
     );
@@ -119,7 +183,7 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
     Widget projectNameBox = Padding(
         padding: EdgeInsets.all(16.0),
         child: Text(
-          projectName ?? '프로젝트명을 불러오는 중...',
+          pjname ?? '프로젝트명을 불러오는 중...',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
     );

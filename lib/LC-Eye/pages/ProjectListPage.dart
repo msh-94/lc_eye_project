@@ -132,7 +132,13 @@ class ProjectListPageState extends State<ProjectListPage>{
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                                onPressed: (){ Navigator.pushNamed(context, "/info",arguments: pj['pjno']); },
+                                onPressed: (){ Navigator.pushNamed(context, "/info",
+                                    arguments: {
+                                  'pjno': pj['pjno'],
+                                  'token': widget.isLogIn,
+                                  'pjname': pj['pjname']
+                                  });
+                                },
                                 icon: Icon(Icons.info_outline)
                             )
                           ],
