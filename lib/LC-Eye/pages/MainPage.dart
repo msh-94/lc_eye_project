@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lc_eye_project/LC-Eye/pages/ProjectListPage.dart';
 
 
@@ -32,6 +31,7 @@ class MainPageState extends State<MainPage>{
         setState(() {
           isLogIn = data;
           currentPageIndex = 1; // 프로젝트 목록으로 이동
+          print(currentPageIndex);
         });
         handleLoginInfo();
         showSnackBar("로그인에 성공했습니다.");
@@ -78,6 +78,7 @@ class MainPageState extends State<MainPage>{
           mname = "";
           cname = "";
           currentPageIndex = 0;
+          print(currentPageIndex);
         });
         showSnackBar("로그아웃 되었습니다.");
       }// if end
@@ -164,7 +165,7 @@ class MainPageState extends State<MainPage>{
 
   List<Widget> get pages => [
     _buildLogin(),
-    ProjectListPage(),
+    ProjectListPage(mname: mname, cname: cname,isLogIn: isLogIn,),
   ];
 
   BottomNavigationBarItem _buildAuthItem() => isLogIn != ""
@@ -190,14 +191,22 @@ class MainPageState extends State<MainPage>{
           if(index == 0){
             if(isLogIn != ""){
               setState(() { currentPageIndex = 1; });
-            }// if end
+            }else {
+              setState(() {
+                currentPageIndex = 0;
+              });
+            }
           }else if(index == 1){
             if(isLogIn != ""){
+              // 로그인 상태 -> 로그아웃 처리
               handleLogOut();
             }else{
-              setState(() { currentPageIndex = 0; });
-            }// if end
-          }// if end
+              // 로그아웃 상태 -> 로그인 페이지 (Index 0)로 이동
+              setState(() {
+                currentPageIndex = 0;
+              });
+            }
+          }
         },
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.featured_play_list_rounded) , label: "프로젝트 목록"),

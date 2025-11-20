@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
       initialRoute: "/",
       routes: {
         "/" : (context) => MainPage(),
+        "/info" : (context) => ProjectInfoPage()
       }
     );
   }// f end

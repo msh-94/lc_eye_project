@@ -7,6 +7,8 @@ class ProjectInfoPage extends StatefulWidget{
 class ProjectInfoPageState extends State<ProjectInfoPage>{
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(
+      appBar: AppBar(title: Text("상세페이지"),),
+    );
   }// f end
 }// class end
