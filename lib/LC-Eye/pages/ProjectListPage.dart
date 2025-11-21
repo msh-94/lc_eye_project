@@ -88,7 +88,7 @@ class ProjectListPageState extends State<ProjectListPage>{
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                widget.mname ?? '' ,
+                "${widget.mname}님" ,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -96,7 +96,7 @@ class ProjectListPageState extends State<ProjectListPage>{
                 ),
               ),
               Text(
-                widget.cname ?? '' ,
+                "소속 ${widget.cname}" ,
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey

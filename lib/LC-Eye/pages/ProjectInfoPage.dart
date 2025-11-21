@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:lc_eye_project/LC-Eye/pages/ProjectBasicInfoWidget.dart';
+import 'package:lc_eye_project/LC-Eye/pages/ProjectExchangeWidget.dart';
 
 final dio = Dio();
 
@@ -17,6 +19,7 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
   // 데이터 관리
   Map<String,dynamic>? basicInfo = {};
   Map<String,dynamic>? resultMap = {};
+  Map<String,dynamic>? exchangeMap = {};
 
   String? pjname;
   int? pjno;
@@ -54,19 +57,31 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
     try{
       // 1. 기본정보 상세조회
       final basicResponse = await dio.get(
-          "http://192.168.40.36:8080/api/project/flutter?pjno=$pjno",
-          options: Options(headers: { 'Authorization' : 'Bearer $token' })
+          "http://192.168.40.36:8080/api/project/flutter?pjno=${pjno}",
+          options: Options(headers: { 'Authorization' : 'Bearer ${token}' })
       );
-
+      print("pjno : ${pjno} , token : ${token}");
+      print(basicResponse.data);
+      
+      // 2. 투입물·산출물 조회
+      final exchangeResponse = await dio.get("http://192.168.40.36:8080/api/inout?pjno=${pjno}",options: Options(headers: { 'Authorization' : 'Bearer ${token}' }));
+      print(exchangeResponse.data);
       // 2. LCI 결과 조회
-      final lciResponse = await dio.get("http://192.168.40.36:8080/api/lci?pjno=$pjno");
+      final lciResponse = await dio.get("http://192.168.40.36:8080/api/lci?pjno=${pjno}",options: Options(headers: { 'Authorization' : 'Bearer ${token}' }));
+      print(lciResponse.data);
 
       setState(() {
         if (basicResponse.data != null) {
           basicInfo = basicResponse.data as Map<String, dynamic>;
+          print(basicInfo);
+        }
+        if (exchangeResponse.data != null){
+          exchangeMap = exchangeResponse.data as Map<String, dynamic>;
+          print(exchangeMap);
         }
         if (lciResponse.data != null) {
           resultMap = lciResponse.data as Map<String, dynamic>;
+          print(resultMap);
         }
         dataLoaded = true;
       });
@@ -105,12 +120,11 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
   }// widget end
 
   // 투입물·산출물 아코디언
-  Widget _buildExchangeAccordion() {
+  Widget buildExchangeAccordion() {
     return ExpansionTile(
       initiallyExpanded: exchangeOpen,
-      // 🚨 enabled 속성 제거 (기본값: true)
 
-      title: const Text( // 🚨 색상 로직 제거
+      title: const Text(
         '투입물·산출물 정보',
         style: TextStyle(
           fontSize: 16,
@@ -129,22 +143,21 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
         });
       },
 
-      children: const <Widget>[
+      children: <Widget>[
         Padding(
           padding: EdgeInsets.all(16.0),
-          child: ProjectExchangeWidget(),
+          child: ProjectExchangeWidget(exchangeMap: exchangeMap ?? {}),
         ),
       ],
     );
   }
 
   // 결과 아코디언
-  Widget _buildResultAccordion() {
+  Widget buildResultAccordion() {
     return ExpansionTile(
       initiallyExpanded: resultOpen,
-      // 🚨 enabled 속성 제거 (기본값: true)
 
-      title: const Text( // 🚨 색상 로직 제거
+      title:  Text(
         'LCI 결과',
         style: TextStyle(
           fontSize: 16,
@@ -155,7 +168,6 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
       onExpansionChanged: (expanded) {
         setState(() {
           resultOpen = expanded;
-          // 그룹화 동작 (다른 아코디언 닫기)
           if (expanded) {
             basicOpen = false;
             exchangeOpen = false;
@@ -165,17 +177,17 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
 
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ProjectResultWidget(
-            pjno: pjno,
-            isOpen: resultOpen,
-          ),
+          padding:  EdgeInsets.all(16.0),
+          child: Text("결과 그약")
         ),
       ],
     );
   }
 
-
+ // ProjectResultWidget(
+  //             pjno: pjno,
+  //             isOpen: resultOpen,
+  //           ),
 
 
   @override

@@ -5,7 +5,7 @@ class ProjectBasicInfoWidget extends StatelessWidget{
   const ProjectBasicInfoWidget({super.key, required this.basicData});
   @override
   Widget build(BuildContext context) {
-    return Padding( // 전체 위젯에 여백을 주기 위해 Padding으로 감싸는 것이 좋습니다.
+    return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -14,17 +14,19 @@ class ProjectBasicInfoWidget extends StatelessWidget{
             const SizedBox(height: 8),
             Text('프로젝트 설명: ${basicData['pjdesc'] ?? '정보없음'}'),
             const SizedBox(height: 8),
+            Text('작성자 : ${basicData['mname'] ?? '정보없음'}'),
+            const SizedBox(height: 8),
             Text('대상 제품 생산량: ${basicData['pjamount'] ?? '정보없음'}'),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(
                 children: [
                   Expanded(
-                    child: Text('단위 그룹: ${basicData['unitGroup'] ?? '정보없음'}'),
+                    child: Text('단위 그룹: ${basicData['ugname'] ?? '정보없음'}'),
                   ),
                   const SizedBox(width: 16.0),
                   Expanded(
-                    child: Text('상세 단위: ${basicData['detailUnit'] ?? '정보없음'}'),
+                    child: Text('상세 단위: ${basicData['unit'] ?? '정보없음'}'),
                   ),
                 ],
               ),
@@ -39,7 +41,7 @@ class ProjectBasicInfoWidget extends StatelessWidget{
                   ),
                   const SizedBox(width: 16.0),
                   Expanded(
-                    child: Text('수정일: ${basicData['updatedate'] ?? '정보없음'}'),
+                    child: Text('수정일: ${basicData['updatedate'] ?? ''}'),
                   ),
                 ],
               ),
