@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:lc_eye_project/LC-Eye/pages/ProjectBasicInfoWidget.dart';
 import 'package:lc_eye_project/LC-Eye/pages/ProjectExchangeWidget.dart';
+import 'package:lc_eye_project/LC-Eye/pages/ProjectResultWidget.dart';
 
 final dio = Dio();
 
@@ -178,7 +179,7 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
       children: <Widget>[
         Padding(
           padding:  EdgeInsets.all(16.0),
-          child: Text("결과 그약")
+          child: ProjectResultWidget(resultMap: resultMap ?? {})
         ),
       ],
     );

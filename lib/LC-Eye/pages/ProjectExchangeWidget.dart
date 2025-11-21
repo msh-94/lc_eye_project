@@ -54,15 +54,15 @@ class ProjectExchangeWidget extends StatelessWidget{
               dataRowMaxHeight: 40.0,
               headingRowHeight: 40.0,
               columns: [
-                DataColumn(label: Text(ioname, style: TextStyle(fontWeight: FontWeight.bold)), numeric: true),
-                DataColumn(label: Text(ioamount, style: TextStyle(fontWeight: FontWeight.bold))),
+                DataColumn(label: Text(ioname, style: TextStyle(fontWeight: FontWeight.bold))),
+                DataColumn(label: Text(ioamount, style: TextStyle(fontWeight: FontWeight.bold)), numeric: true),
                 DataColumn(label: Text('단위', style: TextStyle(fontWeight: FontWeight.bold))),
                 DataColumn(label: Text('매칭이름', style: TextStyle(fontWeight: FontWeight.bold))),
               ],
               rows: rows,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
         ],
       ),
     );
