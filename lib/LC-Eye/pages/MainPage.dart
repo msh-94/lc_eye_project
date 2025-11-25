@@ -66,9 +66,30 @@ class MainPageState extends State<MainPage> {
       } else {
         showSnackBar("아이디 또는 비밀번호를 확인해주세요.");
       }
+    } on DioException catch (e) {
+      // DioException를 통해 Dio 기능 사용
+      // 2. Dio 에러 발생 시 (4xx, 5xx, 타임아웃 등)
+
+      // 응답(response)이 있는 경우에만 상태 코드가 존재함
+      if (e.response != null) {
+        int? statusCode = e.response?.statusCode;
+
+        // 상태 코드별 처리
+        if (statusCode == 404) {
+          showSnackBar("페이지를 찾을 수 없습니다.");
+        } else if (statusCode == 500) {
+          showSnackBar("서버 내부 오류입니다.");
+        } else if (statusCode == 401) {
+          showSnackBar("아이디 또는 비밀번호를 확인해주세요.");
+        } // if end
+      } else {
+        // 3. 응답이 없는 경우 (인터넷 연결 없음, 타임아웃 등)
+        showSnackBar("서버와 연결할 수 없습니다. (네트워크 문제)");
+        print("에러 유형: ${e.type}");
+      } // if end
     } catch (e) {
-      print("로그인 에러: $e");
-      showSnackBar("로그인 실패: 서버 연결을 확인해주세요.");
+      // 4. 기타 예외 (코드 문법 오류 등)
+      print("알 수 없는 에러 발생: $e");
     }
   }
 

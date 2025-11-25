@@ -1,60 +1,106 @@
 import 'package:flutter/material.dart';
 
-class ProjectResultWidget extends StatefulWidget{
-  final Map<String,dynamic> resultMap;
+class ProjectResultWidget extends StatefulWidget {
+  final Map<String, dynamic> resultMap;
 
   const ProjectResultWidget({
     super.key,
     required this.resultMap
   });
 
+  @override
   ProjectResultStateWidget createState() => ProjectResultStateWidget();
+} // class end
 
-}// class end
-
-class ProjectResultStateWidget extends State<ProjectResultWidget>{
-  bool isLoding = false; // 추가 데이터 로딩 확인
+class ProjectResultStateWidget extends State<ProjectResultWidget> {
   int pageSize = 50; // 페이지당 로드할 아이템 수
-  int loadItemCount = 0; // 현재 로드된 아이템 수
 
-  final ScrollController scrollCont = ScrollController();
+  // --- [Input 관련 변수] ---
+  bool isInputLoading = false;
+  int inputLoadCount = 0;
+  final ScrollController inputScrollCont = ScrollController();
 
-  void initState(){
+  // --- [Output 관련 변수] ---
+  bool isOutputLoading = false;
+  int outputLoadCount = 0;
+  final ScrollController outputScrollCont = ScrollController();
+
+  @override
+  void initState() {
     super.initState();
-    loadItemCount = pageSize;
-    scrollCont.addListener(onScroll);
-  }// f end
+    // 초기 로드 개수 설정
+    inputLoadCount = pageSize;
+    outputLoadCount = pageSize;
 
-  void dispose(){
-    scrollCont.dispose();
+    // 각각의 스크롤 리스너 등록
+    inputScrollCont.addListener(onInputScroll);
+    outputScrollCont.addListener(onOutputScroll);
+  } // f end
+
+  @override
+  void dispose() {
+    // 컨트롤러 메모리 해제
+    inputScrollCont.dispose();
+    outputScrollCont.dispose();
     super.dispose();
-  }// f end
+  } // f end
 
-  void onScroll(){
-    if(scrollCont.position.pixels == scrollCont.position.maxScrollExtent){
-      loadMoreData(); // 스크롤 끝에 도달시 추가 데이터 로드
-    }// if end
-  }// f end
+  // --- [Input 스크롤 로직] ---
+  void onInputScroll() {
+    if (inputScrollCont.hasClients &&
+        inputScrollCont.position.pixels == inputScrollCont.position.maxScrollExtent) {
+      loadMoreInput();
+    }
+  }
 
-  void loadMoreData(){
-    if(loadItemCount < (widget.resultMap['inputList']?.length ?? 0)){
+  void loadMoreInput() {
+    List<dynamic> list = (widget.resultMap['inputList'] as List<dynamic>?) ?? [];
+    if (inputLoadCount < list.length && !isInputLoading) {
       setState(() {
-        isLoding = true;
+        isInputLoading = true;
       });
-
-      Future.delayed(Duration(milliseconds: 500),(){
-        setState(() {
-          loadItemCount += pageSize;
-          isLoding = false;
-        });
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() {
+            inputLoadCount += pageSize;
+            isInputLoading = false;
+          });
+        }
       });
+    }
+  }
 
-    }// if end
-  }// f end
+  // --- [Output 스크롤 로직] ---
+  void onOutputScroll() {
+    if (outputScrollCont.hasClients &&
+        outputScrollCont.position.pixels == outputScrollCont.position.maxScrollExtent) {
+      loadMoreOutput();
+    }
+  }
 
-  Widget buildResultTable(String title , List<dynamic>? dataList, ScrollController controller, int itemCount, bool isLoading){
+  void loadMoreOutput() {
+    List<dynamic> list = (widget.resultMap['outputList'] as List<dynamic>?) ?? [];
+    if (outputLoadCount < list.length && !isOutputLoading) {
+      setState(() {
+        isOutputLoading = true;
+      });
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() {
+            outputLoadCount += pageSize;
+            isOutputLoading = false;
+          });
+        }
+      });
+    }
+  }
 
-    int actualCount = dataList!.length;
+  // 테이블 빌드 함수 (공통 사용)
+  Widget buildResultTable(String title, List<dynamic>? dataList,
+      ScrollController? controller, int itemCount, bool isLoading) {
+
+    final List<dynamic> safeDataList = dataList ?? [];
+    int actualCount = safeDataList.length;
     int displayCount = (itemCount > actualCount ? actualCount : itemCount);
 
     return Expanded(
@@ -62,78 +108,90 @@ class ProjectResultStateWidget extends State<ProjectResultWidget>{
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0,vertical: 1.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
             child: Text(
-              '${title} 목록 (${displayCount}/${actualCount})', // 로드된 아이템 수 표시
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blueGrey[700]),
+              '${title} 목록 (${displayCount}/${actualCount})',
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey[700]),
             ),
           ),
 
-          Expanded(
-            child: ListView.builder(
-              controller: controller,
-              itemCount: displayCount + (isLoading ? 1 : 0), // 로딩 중이면 아이템 1개 추가
-              itemBuilder: (context, index) {
-                if(index == 0){
-                 return Padding(
-                   padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                   child: Row(
-                    children: [
-                      Expanded(flex: 1, child: Text('항목명',style: TextStyle(fontWeight: FontWeight.bold))),
-                      Expanded(flex: 1, child: Text("양",style: TextStyle(fontWeight: FontWeight.bold),)),
-                      Expanded(flex: 1, child: Text("단위",style: TextStyle(fontWeight: FontWeight.bold))),
-                    ],
-                   ),
-                 );
-                }
+          if (actualCount == 0)
+            const Expanded(
+              child: Center(
+                child: Text("- 데이터 없음 -", style: TextStyle(color: Colors.grey)),
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.builder(
+                controller: controller,
+                itemCount: 1 + displayCount + (isLoading ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return Container(
+                      color: Colors.grey[200],
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                      child: Row(
+                        children: const [
+                          Expanded(flex: 1, child: Text('항목명', style: TextStyle(fontWeight: FontWeight.bold))),
+                          Expanded(flex: 1, child: Text("양", style: TextStyle(fontWeight: FontWeight.bold))),
+                          Expanded(flex: 1, child: Text("단위", style: TextStyle(fontWeight: FontWeight.bold))),
+                        ],
+                      ),
+                    );
+                  }
 
-                if (index == displayCount) {
-                  // 로딩 인디케이터 표시
-                  return Center(child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(),
-                  ));
-                }// if end
+                  if (isLoading && index == displayCount + 1) {
+                    return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
+                        ));
+                  }
 
-                final row = dataList[index];
-                String name = row['fname']?.toString() ?? 'N/A';
-                String amount = row['amount']?.toString() ?? 'N/A';
-                String uname = row['uname']?.toString() ?? 'N/A';
+                  int dataIndex = index - 1;
+                  if (dataIndex >= safeDataList.length) return const SizedBox();
 
-                String amountFormatted;
-                try{
-                  double amountDouble = double.parse(amount);
-                  amountFormatted = amountDouble.toStringAsFixed(3);
-                }catch(e){
-                  amountFormatted = 'N/A';
-                }// try end
+                  final row = safeDataList[dataIndex];
+                  String name = row['fname']?.toString() ?? 'N/A';
+                  String amount = row['amount']?.toString() ?? '0';
+                  String uname = row['uname']?.toString() ?? 'N/A';
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                  child: Row(
-                    children: [
-                      Expanded(flex: 1, child: Text(name)),
-                      Expanded(flex: 1, child: Text(amountFormatted)),
-                      Expanded(flex: 1, child: Text(uname)),
-                    ],
-                  ),
-                );
-              },
+                  String amountFormatted;
+                  try {
+                    double amountDouble = double.parse(amount);
+                    amountFormatted = amountDouble.toStringAsFixed(3);
+                  } catch (e) {
+                    amountFormatted = 'N/A';
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    child: Row(
+                      children: [
+                        Expanded(flex: 1, child: Text(name, style: const TextStyle(fontSize: 13))),
+                        Expanded(flex: 1, child: Text(amountFormatted, style: const TextStyle(fontSize: 13))),
+                        Expanded(flex: 1, child: Text(uname, style: const TextStyle(fontSize: 13))),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
           const SizedBox(height: 10),
         ],
       ),
     );
   }
 
-  // @override build 메서드
   @override
   Widget build(BuildContext context) {
-    List<dynamic>? inputs = widget.resultMap['inputList'] as List<dynamic>?;
-    List<dynamic>? outputs = widget.resultMap['outputList'] as List<dynamic>?;
+    List<dynamic> inputs = (widget.resultMap['inputList'] as List<dynamic>?) ?? [];
+    List<dynamic> outputs = (widget.resultMap['outputList'] as List<dynamic>?) ?? [];
 
-    // 테이블 두 개를 나란히 배치하는 Row
     return Column(
       children: [
         SizedBox(
@@ -141,14 +199,17 @@ class ProjectResultStateWidget extends State<ProjectResultWidget>{
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              buildResultTable('Input', inputs, scrollCont, loadItemCount, isLoding),
+              // [Input 테이블] Input 전용 변수들 전달
+              buildResultTable('Input', inputs, inputScrollCont, inputLoadCount, isInputLoading),
+
               const VerticalDivider(width: 1, thickness: 1, color: Colors.grey),
-              buildResultTable("Output", outputs, ScrollController(), outputs?.length ?? 0, false), // Output은 페이징 미적용 예시
+
+              // [Output 테이블] Output 전용 변수들 전달 (이제 여기도 페이징 됨)
+              buildResultTable('Output', outputs, outputScrollCont, outputLoadCount, isOutputLoading),
             ],
           ),
         ),
       ],
     );
   }
-
-}// class end
+} // class end
