@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:lc_eye_project/LC-Eye/config/api_config.dart';
 import 'package:lc_eye_project/LC-Eye/pages/ProjectBasicInfoWidget.dart';
 import 'package:lc_eye_project/LC-Eye/pages/ProjectExchangeWidget.dart';
 import 'package:lc_eye_project/LC-Eye/pages/ProjectResultWidget.dart';
@@ -57,18 +58,18 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
 
     try{
       // 1. 기본정보 상세조회
-      final basicResponse = await dio.get(
-          "http://192.168.40.36:8080/api/project/flutter?pjno=${pjno}",
+      final basicResponse = await ApiConfig().dio.get(
+          "/api/project/flutter?pjno=${pjno}",
           options: Options(headers: { 'Authorization' : 'Bearer ${token}' })
       );
       print("pjno : ${pjno} , token : ${token}");
       print(basicResponse.data);
       
       // 2. 투입물·산출물 조회
-      final exchangeResponse = await dio.get("http://192.168.40.36:8080/api/inout?pjno=${pjno}",options: Options(headers: { 'Authorization' : 'Bearer ${token}' }));
+      final exchangeResponse = await ApiConfig().dio.get("/api/inout?pjno=${pjno}",options: Options(headers: { 'Authorization' : 'Bearer ${token}' }));
       print(exchangeResponse.data);
       // 2. LCI 결과 조회
-      final lciResponse = await dio.get("http://192.168.40.36:8080/api/lci?pjno=${pjno}",options: Options(headers: { 'Authorization' : 'Bearer ${token}' }));
+      final lciResponse = await ApiConfig().dio.get("/api/lci?pjno=${pjno}",options: Options(headers: { 'Authorization' : 'Bearer ${token}' }));
       print(lciResponse.data);
 
       setState(() {

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:lc_eye_project/LC-Eye/config/api_config.dart';
 
 final dio = Dio();
 
@@ -24,7 +25,7 @@ class ProjectListPageState extends State<ProjectListPage>{
   // 프로젝트 목록 조회
   void readAllProject() async{
     try{
-      final response = await dio.get("http://192.168.40.36:8080/api/project/flutter/all",
+      final response = await ApiConfig().dio.get("/api/project/flutter/all",
           options: Options(
           headers: { 'Authorization' : 'Bearer ${widget.isLogIn}' }
       ));
