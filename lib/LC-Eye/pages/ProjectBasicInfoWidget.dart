@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 class ProjectBasicInfoWidget extends StatelessWidget{
   final Map<String,dynamic> basicData;
   const ProjectBasicInfoWidget({super.key, required this.basicData});
+
   @override
   Widget build(BuildContext context) {
+    print("상세정보확인 : ${basicData}");
     return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

@@ -17,7 +17,7 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
   bool exchangeOpen = false;
   bool resultOpen = false;
   // 로딩 상태 관리
-  bool dataLoaded = false;
+  bool dataLoading = false;
   // 데이터 관리
   Map<String,dynamic>? basicInfo = {};
   Map<String,dynamic>? resultMap = {};
@@ -31,68 +31,95 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // 데이터를 추출했으면 리턴
-    if (dataLoaded) {
-      return;
-    }// if end
-
     // pjno 꺼내기
     final args = ModalRoute.of(context)?.settings.arguments;
 
+    int? newPjno;
+    String? newToken;
+    String? newPjname;
+
     // int로 캐스팅
     if (args is Map) {
-      pjno = args['pjno'] as int?;
-      token = args['token'] as String?;
-      pjname = args['pjname'] as String?;
-      // 상세정보 불러오기
-      if (pjno != null) {
-        readAllDetails();
-        dataLoaded = true; // 로딩 시작 플래그 설정
-      }// if end
+      newPjno = args['pjno'] as int?;
+      newToken = args['token'] as String?;
+      newPjname = args['pjname'] as String?;
     }// if end
+
+    if(newPjno != null && (newPjno != pjno || token == null)){
+      // 상태 변수 업데이트
+      pjno = newPjno;
+      token = newToken;
+      pjname = newPjname;
+
+      // 이전 데이터 초기화 및 로딩 시작
+      setState(() {
+        dataLoading = true;
+        basicInfo = {};
+        resultMap = {};
+        exchangeMap = {};
+      });
+
+      // 상세정보 불러오기
+      readAllDetails(pjno);
+    }// if end
+
   }// f end
 
   // 프로젝트 상세조회
-  void readAllDetails() async{
+  void readAllDetails(int? pjno ) async{
     if (pjno == null || token == null) return;
 
-    try{
-      // 1. 기본정보 상세조회
+    Map<String,dynamic>? basicData;
+    Map<String,dynamic>? exchangeData;
+    Map<String,dynamic>? resultData;
+
+    // 1. 기본정보 상세조회
+    try {
       final basicResponse = await ApiConfig().dio.get(
           "/api/project/flutter?pjno=${pjno}",
           options: Options(headers: { 'Authorization' : 'Bearer ${token}' })
       );
-      print("pjno : ${pjno} , token : ${token}");
       print(basicResponse.data);
-      
-      // 2. 투입물·산출물 조회
+      basicData = basicResponse.data as Map<String, dynamic>;
+    } catch (e) {
+      print("기본정보 조회 오류: $e");
+    }
+
+    // 2. 투입물·산출물 조회
+    try {
       final exchangeResponse = await ApiConfig().dio.get("/api/inout?pjno=${pjno}",options: Options(headers: { 'Authorization' : 'Bearer ${token}' }));
       print(exchangeResponse.data);
-      // 2. LCI 결과 조회
+      exchangeData = exchangeResponse.data as Map<String, dynamic>;
+    } catch (e) {
+      print("투입물·산출물 조회 오류: $e");
+    }
+
+    // 3. LCI 결과 조회 (오류 발생 부분)
+    try {
       final lciResponse = await ApiConfig().dio.get("/api/lci?pjno=${pjno}",options: Options(headers: { 'Authorization' : 'Bearer ${token}' }));
       print(lciResponse.data);
-
-      setState(() {
-        if (basicResponse.data != null) {
-          basicInfo = basicResponse.data as Map<String, dynamic>;
-          print(basicInfo);
-        }
-        if (exchangeResponse.data != null){
-          exchangeMap = exchangeResponse.data as Map<String, dynamic>;
-          print(exchangeMap);
-        }
-        if (lciResponse.data != null) {
-          resultMap = lciResponse.data as Map<String, dynamic>;
-          print(resultMap);
-        }
-        dataLoaded = true;
-      });
-    }catch(e){
-      print("통신 오류 : $e");
-      setState(() {
-        dataLoaded = true; // 통신 실패해도 로딩 완료 처리
-      });
+      resultData = lciResponse.data as Map<String, dynamic>;
+    } catch (e) {
+      print("LCI 결과 조회 오류: $e"); // 이 에러만 catch하고 다음 로직으로 진행
     }
+
+    setState(() {
+      if (basicData != null) {
+        basicInfo = basicData;
+        print("조회결과 : ${basicInfo} ");
+      }
+      if (exchangeData != null){
+        exchangeMap = exchangeData;
+        print(exchangeMap);
+      }
+      if (resultData != null) {
+        resultMap = resultData;
+        print(resultMap);
+      }
+      dataLoading = false;
+    });
+
+
   }// f end
 
 
@@ -203,7 +230,9 @@ class ProjectInfoPageState extends State<ProjectInfoPage>{
     );
     return Scaffold(
       appBar: AppBar(title: Text("프로젝트 상세 정보"),),
-      body: SingleChildScrollView(
+      body: dataLoading
+      ? Center(child: CircularProgressIndicator(),)
+      : SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
